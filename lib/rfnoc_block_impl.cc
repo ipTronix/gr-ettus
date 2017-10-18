@@ -562,7 +562,7 @@ rfnoc_block_impl::work_rx_a(
 
     case ::uhd::rx_metadata_t::ERROR_CODE_TIMEOUT:
       //its ok to timeout, perhaps the user is doing finite streaming
-      std::cout << "timeout on chan 0" << std::endl;
+      //std::cout << "timeout on chan 0" << std::endl;
       break;
 
     case ::uhd::rx_metadata_t::ERROR_CODE_OVERFLOW:
@@ -584,7 +584,14 @@ rfnoc_block_impl::work_rx_a(
             );
       }
   }
-
+  if (_rx.metadata.has_time_spec) {
+    const pmt::pmt_t val = pmt::make_tuple
+      (pmt::from_uint64(_rx.metadata.time_spec.get_full_secs()),
+       pmt::from_double(_rx.metadata.time_spec.get_frac_secs()));
+    for (size_t i = 0; i < output_items.size(); i++) {
+      add_item_tag(i, nitems_written(i)+ (num_samps / _rx.vlen) - 1, pmt::string_to_symbol("rx_time") , val);
+    }
+  }
   // There's no 'produce_each()', unfortunately
   return num_samps / _rx.vlen;
 }
@@ -615,7 +622,7 @@ rfnoc_block_impl::work_rx_u(
 
       case ::uhd::rx_metadata_t::ERROR_CODE_TIMEOUT:
         //its ok to timeout, perhaps the user is doing finite streaming
-        std::cout << "timeout on chan " << i << std::endl;
+        //std::cout << "timeout on chan " << i << std::endl;
         break;
 
       case ::uhd::rx_metadata_t::ERROR_CODE_OVERFLOW:
@@ -637,7 +644,14 @@ rfnoc_block_impl::work_rx_u(
         );
       }
     }
-
+    if (_rx.metadata.has_time_spec) {
+      const pmt::pmt_t val = pmt::make_tuple
+        (pmt::from_uint64(_rx.metadata.time_spec.get_full_secs()),
+         pmt::from_double(_rx.metadata.time_spec.get_frac_secs()));
+      for (size_t i = 0; i < output_items.size(); i++) {
+        add_item_tag(i, nitems_written(i)+ (num_samps / _rx.vlen) - 1, pmt::string_to_symbol("rx_time") , val);
+      }
+    }
     produce(i, num_samps / _rx.vlen);
   } /* end for (chans) */
 }
